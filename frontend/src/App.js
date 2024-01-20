@@ -13,7 +13,14 @@ function App() {
     if (inputValue.trim()) {
       setMessages([...messages, inputValue]);
       setInputValue('');
-    }
+      axios.post('./api/index', inputValue) 
+        .then(response => {
+          console.log("Success: ", response.data)
+        })
+        .catch(error => {
+          console.error("Error: ", error);
+        });
+      }
   };
 
   const handleKeyDown = (event) => {
