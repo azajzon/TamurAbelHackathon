@@ -13,11 +13,33 @@ export default function Home() {
 
   const handleSendClick = async () => {
     if (inputValue.trim()) {
-      setMessages([...messages, inputValue]);
+      setMessages([...messages, { text: inputValue, type: 'user' }]);
       setInputValue('');
-      await axios.post('/api', inputValue);
+  
+      try {
+        const response = await axios.post('/api', inputValue);
+  
+        // simulate serverResponse, or a fake one
+        setTimeout(() => {
+          try {
+            const serverResponse = response.data.message || "This is a simulated gray response message.";
+            console.log("SERVER RESPONSE: ", response.data);
+            console.log("RESPONSE: ", serverResponse);
+            setMessages(currentMessages => [...currentMessages, { text: serverResponse, type: 'response' }]);
+          } catch (error) {
+            console.error('Error in set timeout:', error);
+            // Handle any errors that might occur inside the setTimeout
+          }
+        }, 1000);
+        
+      } catch (error) {
+        console.error('There was an error sending the message:', error);
+        // could handle error here and maybe display message
+        setMessages(messages => [...messages, { text: 'Error: Message could not be sent.', type: 'error' }]);
       }
+    }
   };
+  
 
   const handleKeyDown = (event) => {
     // Check if the pressed key is 'Enter'
@@ -31,12 +53,12 @@ export default function Home() {
     <div className="App">
       <div className="chat-container">
         <header className="chat-header">
-          My awesome chat
+          Student Counselor Chatbot
         </header>
         <div className="messages-container">
           {messages.map((message, index) => (
-            <div key={index} className="message">
-              {message}
+            <div key={index} className={`message ${message.type}`}>
+              {message.text}
             </div>
           ))}
         </div>

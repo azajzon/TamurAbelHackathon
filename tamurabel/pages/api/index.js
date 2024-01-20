@@ -1,6 +1,4 @@
 export default async function handler(req, res) {
-
-    
-    console.log("received");
-    console.log("HERE");
+    console.log("Input received");
+    res.status(200).json({message: "Request processed successfully"});
 }
