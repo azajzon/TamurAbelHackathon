@@ -1,7 +1,10 @@
 // pages/api/assistant.js
+require('dotenv').config();
 import { Configuration, OpenAI } from "openai";
 
-const OPENAI_API_KEY='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';
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+
+
 
 const openai = new OpenAI({
   apiKey: OPENAI_API_KEY
