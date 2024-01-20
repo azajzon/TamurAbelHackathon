@@ -13,17 +13,25 @@ export default async function handler(req, res) {
       // Assuming you send the message text in the body of the POST request
       const { message } = req.body;
 
+      // retrieve assistant
+      const myAssistant = await openai.beta.assistants.retrieve(
+        "asst_vMT7uzPjR7ER8HSPGaIvW03w"
+      );
+
       // Create an Assistant and send a message
-      const assistantResponse = await openai.beta.assistants.create({
-        name: "Student Counselor Assistant",
-        instructions: "You are a personal student counselor. Answer the users questions.",
-        tools: [{ type: "retrieval"}],
-        model: "gpt-3.5-turbo-1106",
-      });
+      if(!myAssistant) {
+        myAssistant = await openai.beta.assistants.create({
+          name: "Student Counselor Assistant",
+          instructions: "You are a personal student counselor. Answer the users questions.",
+          tools: [{ type: "retrieval"}],
+          model: "gpt-3.5-turbo-1106",
+        });
+      }
+      
 
       // add a message to the Assistant's thread and get a response
       const response = await openai.beta.assistants.addMessage({
-        assistant: assistant.data.id,
+        assistant: myAssistant.data.id,
         message: {
           content: message
         }
