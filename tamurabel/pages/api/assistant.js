@@ -1,44 +1,86 @@
 // pages/api/assistant.js
-import { Configuration, OpenAIApi } from "openai";
+import { Configuration, OpenAI } from "openai";
 
-const OPENAI_API_KEY='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';
+const OPENAI_API_KEY='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';
 
-const openai = new OpenAIApi(new Configuration({
+const openai = new OpenAI({
   apiKey: OPENAI_API_KEY
-}));
+});
 
 export default async function handler(req, res) {
   if (req.method === 'POST') {
     try {
-      // Assuming you send the message text in the body of the POST request
-      const { message } = req.body;
-
-      // retrieve assistant
-      const myAssistant = await openai.beta.assistants.retrieve(
-        "asst_vMT7uzPjR7ER8HSPGaIvW03w"
+      
+      // keeps history and doesn't keep creating new assistants
+      let assistant = await openai.beta.assistants.retrieve(
+        "asst_9S3EXX6e5DOvmMruz24iDxta"
       );
 
-      // Create an Assistant and send a message
-      if(!myAssistant) {
-        myAssistant = await openai.beta.assistants.create({
+      // create an assistant if needed
+      if (!assistant) {
+        assistant = await openai.beta.assistants.create({
           name: "Student Counselor Assistant",
-          instructions: "You are a personal student counselor. Answer the users questions.",
+          instructions: "You are a personal Purdue student counselor. Answer the users questions.",
           tools: [{ type: "retrieval"}],
           model: "gpt-3.5-turbo-1106",
         });
-      }
-      
+      } 
 
-      // add a message to the Assistant's thread and get a response
-      const response = await openai.beta.assistants.addMessage({
-        assistant: myAssistant.data.id,
-        message: {
-          content: message
+      // create a thread
+      const thread = await openai.beta.threads.create();
+
+      // get user input that will be sent as message in thread
+      const {userInput} = req.body;
+      console.log("User input sending in message: ", userInput)
+
+      // add message to a thread
+      const message = await openai.beta.threads.messages.create(
+        thread.id,
+        {
+          role: "user",
+          content: userInput
         }
-      });
+      );
 
-      res.status(200).json({ assistantResponse });
+      // run the assistant
+      const run = await openai.beta.threads.runs.create(
+        thread.id,
+        { 
+          assistant_id: assistant.id,
+        }
+      );
+
+      let runRetrieve = await openai.beta.threads.runs.retrieve(
+        thread.id,
+        run.id
+      );
+      console.log("FIRST RUN RETRIEVE: ", runRetrieve)
       
+      // polling for completion
+      while (runRetrieve.status !== 'completed' && runRetrieve.status !== 'failed') {
+        // Wait for a bit before polling again
+        await new Promise(resolve => setTimeout(resolve, 5000));
+        runRetrieve = await openai.beta.threads.runs.retrieve(
+          thread.id,
+          run.id
+        );
+        console.log("MORE RUN RETRIEVE: ", runRetrieve)
+      }
+
+      // retrieve the list of messages from the thread after the run is complete
+      const messagesResponse = await openai.beta.threads.messages.list(thread.id);
+
+      // find messages from assistant and extract content
+      const assistantMessages = messagesResponse.data.filter(msg => msg.role === 'assistant');
+      const assistantResponse = assistantMessages.map(msg => msg.content);
+
+      console.log("RESPONSE FROM AI:", JSON.stringify(assistantResponse, null, 2));
+      console.log("EXTRACTED RESPONSE: ", assistantResponse[0][0].text.value)
+
+      // send the responses back to the client
+      res.status(200).json({ message: assistantResponse[0][0].text.value });
+
+
     } catch (error) {
       console.error('Assistant API error:', error);
       res.status(500).json({ message: 'Assistant API error occurred.' });

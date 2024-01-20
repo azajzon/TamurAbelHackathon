@@ -17,7 +17,8 @@ export default function Home() {
       setInputValue('');
   
       try {
-        const response = await axios.post('/api', inputValue);
+        const response = await axios.post('/api/assistant', {
+          userInput: inputValue});
   
         // simulate serverResponse, or a fake one
         setTimeout(() => {
