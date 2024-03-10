@@ -16,14 +16,14 @@ export default async function handler(req, res) {
       
       // keeps history and doesn't keep creating new assistants
       let assistant = await openai.beta.assistants.retrieve(
-        "asst_9S3EXX6e5DOvmMruz24iDxta"
+        "asst_iO9onZPh7ZfI6PRlAv6KRsdl"
       );
 
       // create an assistant if needed
       if (!assistant) {
         assistant = await openai.beta.assistants.create({
-          name: "Student Counselor Assistant",
-          instructions: "You are a personal Purdue student counselor. Answer the users questions.",
+          name: "Purdue CS Counselor Assistant",
+          instructions: "You are a personal Purdue CS counselor. Answer the users questions.",
           tools: [{ type: "retrieval"}],
           model: "gpt-3.5-turbo-1106",
         });
