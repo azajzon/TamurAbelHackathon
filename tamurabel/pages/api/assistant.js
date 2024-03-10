@@ -1,4 +1,4 @@
-// test commit
+// test 
 require('dotenv').config();
 import { Configuration, OpenAI } from "openai";
 
